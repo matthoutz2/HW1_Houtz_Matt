@@ -9,26 +9,44 @@ knit: (function(input_file, encoding) {
  output_file=file.path(dirname(input_file), out_dir, 'index.html'))})
 ---
 
+## Data found and downloaded from https://fbref.com/en/comps/9/10728/stats/2020-2021-Premier-League-Stats#all_stats_standard
+
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, message = FALSE)
 ```
 
-## R Markdown
+## R Code
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+```{r}
+library(dplyr)
+library(ggplot2)
+library(tidyverse)
+library(ggthemes)
+#Reading in the downloaded data file and then keeping only necessary columns
+soccer <- read.csv(file = "C:/Users/matth/Documents/Grad School/Spring 2022/STAA 566/Data/pl_stats.csv", header = T)
+soccer <- soccer %>% 
+    select(`Age`, `Min`, `Gls.`) %>%
+    drop_na()
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+#Sum Minutes and Goals by age and creating a variable for goals per 10 games
+sums.soccer <- soccer %>% group_by(Age) %>%
+    summarize(Minutes = sum(Min),
+              Goals = sum(Gls.),
+              GlsPer10Gms = (Goals / Minutes) * 900)
 
-```{r cars}
-summary(cars)
+pl.min.vs.age <- ggplot(data = sums.soccer, aes(x = Age, y = Minutes)) + geom_bar(stat = "identity", fill = "mediumpurple4") +
+    ggtitle("Premier League Player Ages vs. Minutes Played") + theme(plot.title = element_text(hjust = 0.5))
+```
+## Save Figure as pdf
+
+```{r save as pdf}
+pdf("PL Age vs. Goals.pdf", heigh=6, width=8)
+print(pl.min.vs.age)
+dev.off()
 ```
 
-## Including Plots
+## Display Figure in HTML
 
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
+```{r diplay}
+pl.min.vs.age
 ```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
